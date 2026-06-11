@@ -3,8 +3,11 @@ let expenseChartInstance = null;
 let budgets = {};
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Set modern execution date standard safely
-    document.getElementById('tx-date').value = '2026-06-12';
+    // Safely set the input date value to today's date
+    const dateInput = document.getElementById('tx-date');
+    if (dateInput) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
     refreshDataHub();
 });
 
@@ -15,42 +18,51 @@ function switchTab(type) {
     const categoryGroup = document.getElementById('category-group');
     const lblDescription = document.getElementById('lbl-title');
 
+    if (!expBtn || !incBtn) return;
+
     if (type === 'expense') {
         expBtn.classList.add('active');
         incBtn.classList.remove('active');
-        categoryGroup.style.display = 'block';
-        lblDescription.innerText = 'Expense Description';
+        if (categoryGroup) categoryGroup.style.display = 'block';
+        if (lblDescription) lblDescription.innerText = 'Expense Description';
     } else {
         incBtn.classList.add('active');
         expBtn.classList.remove('active');
-        categoryGroup.style.display = 'none';
-        lblDescription.innerText = 'Income Source';
+        if (categoryGroup) categoryGroup.style.display = 'none';
+        if (lblDescription) lblDescription.innerText = 'Income Source';
     }
 }
 
 async function refreshDataHub() {
-    const response = await fetch('/api/data');
-    const data = await response.json();
-    budgets = data.budgets;
+    try {
+        const response = await fetch('/api/data');
+        const data = await response.json();
+        budgets = data.budgets || {};
 
-    // Recalculate financial updates
-    const totalIncome = data.income.reduce((sum, i) => sum + i.amount, 0);
-    const totalExpenses = data.expenses.reduce((sum, e) => sum + e.amount, 0);
-    const netBalance = totalIncome - totalExpenses;
+        const totalIncome = data.income ? data.income.reduce((sum, i) => sum + i.amount, 0) : 0;
+        const totalExpenses = data.expenses ? data.expenses.reduce((sum, e) => sum + e.amount, 0) : 0;
+        const netBalance = totalIncome - totalExpenses;
 
-    document.getElementById('txt-income').innerText = `₹${totalIncome.toLocaleString('en-IN')}`;
-    document.getElementById('txt-expenses').innerText = `₹${totalExpenses.toLocaleString('en-IN')}`;
-    document.getElementById('txt-balance').innerText = `₹${netBalance.toLocaleString('en-IN')}`;
+        const incEl = document.getElementById('txt-income');
+        const expEl = document.getElementById('txt-expenses');
+        const balEl = document.getElementById('txt-balance');
 
-    evaluateSmartAlerts(data.expenses);
-    renderTableLogs(data.expenses);
-    generateVisualizationChart(data.expenses);
+        if (incEl) incEl.innerText = `₹${totalIncome.toLocaleString('en-IN')}`;
+        if (expEl) expEl.innerText = `₹${totalExpenses.toLocaleString('en-IN')}`;
+        if (balEl) balEl.innerText = `₹${netBalance.toLocaleString('en-IN')}`;
+
+        evaluateSmartAlerts(data.expenses || []);
+        renderTableLogs(data.expenses || []);
+        generateVisualizationChart(data.expenses || []);
+    } catch (err) {
+        console.error("Error refreshing dashboard data:", err);
+    }
 }
 
 function evaluateSmartAlerts(expenses) {
     const alertBanner = document.getElementById('alert-banner');
+    if (!alertBanner) return;
     
-    // Group categories to verify threshold breach limits
     const usage = {};
     expenses.forEach(exp => {
         usage[exp.category] = (usage[exp.category] || 0) + exp.amount;
@@ -74,15 +86,22 @@ function evaluateSmartAlerts(expenses) {
 
 async function handleTransactionSubmit(e) {
     e.preventDefault();
-    const title = document.getElementById('tx-title').value;
-    const amount = document.getElementById('tx-amount').value;
-    const date = document.getElementById('tx-date').value;
+    const titleEl = document.getElementById('tx-title');
+    const amountEl = document.getElementById('tx-amount');
+    const dateEl = document.getElementById('tx-date');
+    const catEl = document.getElementById('tx-category');
+
+    if (!titleEl || !amountEl || !dateEl) return;
+
+    const title = titleEl.value;
+    const amount = amountEl.value;
+    const date = dateEl.value;
     
     let endpoint = '/api/expense';
     let bodyPayload = { title, amount, date };
 
     if (currentTab === 'expense') {
-        bodyPayload.category = document.getElementById('tx-category').value;
+        bodyPayload.category = catEl ? catEl.value : 'Food';
     } else {
         endpoint = '/api/income';
         bodyPayload.source = title; 
@@ -94,8 +113,8 @@ async function handleTransactionSubmit(e) {
         body: JSON.stringify(bodyPayload)
     });
 
-    document.getElementById('tx-title').value = '';
-    document.getElementById('tx-amount').value = '';
+    titleEl.value = '';
+    amountEl.value = '';
     refreshDataHub();
 }
 
@@ -106,6 +125,7 @@ async function deleteExpenseItem(id) {
 
 function renderTableLogs(expenses) {
     const tbody = document.getElementById('expense-rows');
+    if (!tbody) return;
     tbody.innerHTML = '';
     
     expenses.forEach(exp => {
@@ -121,12 +141,15 @@ function renderTableLogs(expenses) {
 }
 
 function generateVisualizationChart(expenses) {
+    const canvas = document.getElementById('expenseChart');
+    if (!canvas) return;
+
     const categories = ['Food', 'Travel', 'Shopping', 'Bills', 'Entertainment', 'Education'];
     const totals = categories.map(cat => {
         return expenses.filter(e => e.category === cat).reduce((sum, e) => sum + e.amount, 0);
     });
 
-    const ctx = document.getElementById('expenseChart').getContext('2d');
+    const ctx = canvas.getContext('2d');
     
     if (expenseChartInstance) {
         expenseChartInstance.destroy();
@@ -150,12 +173,14 @@ function generateVisualizationChart(expenses) {
 
 async function askAIAdvisor() {
     const queryField = document.getElementById('ai-input');
+    if (!queryField) return;
+
     const userQuery = queryField.value.trim();
     if (!userQuery) return;
 
     const chatBox = document.getElementById('chat-output');
+    if (!chatBox) return;
     
-    // Append User Message
     const userDiv = document.createElement('p');
     userDiv.className = 'user-msg';
     userDiv.innerText = userQuery;
@@ -163,7 +188,6 @@ async function askAIAdvisor() {
     
     queryField.value = '';
 
-    // Query Engine API
     const response = await fetch('/api/ai-advisor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -171,7 +195,6 @@ async function askAIAdvisor() {
     });
     const result = await response.json();
 
-    // Append AI Output Response
     const aiDiv = document.createElement('p');
     aiDiv.className = 'ai-msg';
     aiDiv.innerText = result.answer;
@@ -182,16 +205,23 @@ async function askAIAdvisor() {
 
 async function scanReceipt() {
     const statusDiv = document.getElementById('scanner-status');
+    if (!statusDiv) return;
+
     statusDiv.innerText = "Scanning receipt image via optical AI lines...";
     
     const response = await fetch('/api/receipt-scanner', { method: 'POST' });
     const data = await response.json();
 
-    if(data.success) {
+    if (data.success) {
         statusDiv.innerHTML = `<span style="color: green;">✓ Populated: Found ${data.extracted.title} (₹${data.extracted.amount})</span>`;
-        document.getElementById('tx-title').value = data.extracted.title;
-        document.getElementById('tx-amount').value = data.extracted.amount;
+        
+        const titleEl = document.getElementById('tx-title');
+        const amountEl = document.getElementById('tx-amount');
+        const catEl = document.getElementById('tx-category');
+
+        if (titleEl) titleEl.value = data.extracted.title;
+        if (amountEl) amountEl.value = data.extracted.amount;
         switchTab('expense');
-        document.getElementById('tx-category').value = data.extracted.category;
+        if (catEl) catEl.value = data.extracted.category;
     }
 }
