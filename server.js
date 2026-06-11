@@ -94,7 +94,9 @@ app.post('/api/receipt-scanner', (req, res) => {
     const randomPick = standardMocks[Math.floor(Math.random() * standardMocks.length)];
     res.json({ success: true, extracted: randomPick });
 });
-
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 app.listen(PORT, () => {
     console.log(`FinManager AI Server running safely on http://localhost:${PORT}`);
 });
