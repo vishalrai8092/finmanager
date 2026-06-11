@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinManager AI - Smart Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js for beautiful visual graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation Area -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <h2>📊 FinManager AI</h2>
+            </div>
+            <nav class="nav-links">
+                <a href="#" class="active">🏠 Dashboard</a>
+                <a href="#logs">📋 Transaction Logs</a>
+                <a href="#ai-chat">🤖 AI Financial Advisor</a>
+            </nav>
+        </aside>
+
+        <!-- Main Dashboard Operations View -->
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Financial Hub</h1>
+                <div id="alert-banner" class="alert-hidden"></div>
+            </header>
+
+            <!-- Metrics Highlight Scoreboard -->
+            <section class="metrics-grid">
+                <div class="card metric-card income">
+                    <h3>Total Income</h3>
+                    <p id="txt-income">₹0</p>
+                </div>
+                <div class="card metric-card expenses">
+                    <h3>Total Expenses</h3>
+                    <p id="txt-expenses">₹0</p>
+                </div>
+                <div class="card metric-card balance">
+                    <h3>Remaining Balance</h3>
+                    <p id="txt-balance">₹0</p>
+                </div>
+            </section>
+
+            <!-- Two-Column Control Workspace -->
+            <section class="workspace-grid">
+                <!-- Column 1: Action Entry Cards -->
+                <div class="workspace-column">
+                    <!-- Transaction Submission Panel -->
+                    <div class="card action-card">
+                        <div class="tab-header">
+                            <button id="tab-exp" class="tab-btn active" onclick="switchTab('expense')">Add Expense</button>
+                            <button id="tab-inc" class="tab-btn" onclick="switchTab('income')">Add Income</button>
+                        </div>
+                        <form id="tx-form" onsubmit="handleTransactionSubmit(event)">
+                            <div class="form-group">
+                                <label id="lbl-title" for="tx-title">Expense Description</label>
+                                <input type="text" id="tx-title" placeholder="e.g., Grocery Shopping" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="tx-amount">Amount (₹)</label>
+                                <input type="number" id="tx-amount" placeholder="0.00" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="tx-date">Transaction Date</label>
+                                <input type="date" id="tx-date" required>
+                            </div>
+                            <div class="form-group" id="category-group">
+                                <label for="tx-category">Category Target</label>
+                                <select id="tx-category">
+                                    <option value="Food">Food</option>
+                                    <option value="Travel">Travel</option>
+                                    <option value="Shopping">Shopping</option>
+                                    <option value="Bills">Bills</option>
+                                    <option value="Entertainment">Entertainment</option>
+                                    <option value="Education">Education</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-submit">Log Entry Safely</button>
+                        </form>
+                    </div>
+
+                    <!-- Smart Document Scanner Card -->
+                    <div class="card action-card">
+                        <h3>🧾 AI Receipt Core Scanner</h3>
+                        <p class="subtitle">Upload a photo of your paper invoice receipt to auto-populate metadata parameters instantly.</p>
+                        <div class="scanner-zone">
+                            <button class="btn-scan" onclick="scanReceipt()">Simulate Optical AI Scan</button>
+                            <p id="scanner-status" class="scan-idle">Ready for optical execution</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Data Insights Engine Visualization & Chat -->
+                <div class="workspace-column">
+                    <!-- Dynamic Doughnut Aggregation Chart -->
+                    <div class="card charting-card">
+                        <h3>📊 Expense Allocation Map</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- AI Smart Chat Advisor Console -->
+                    <div class="card ai-chat-card" id="ai-chat">
+                        <h3>🤖 Contextual AI Advisor Stream</h3>
+                        <div class="chat-viewport" id="chat-output">
+                            <p class="ai-msg">Hello, I am your localized financial advisor engine. Log some metrics or ask me a budget optimizations query!</p>
+                        </div>
+                        <div class="chat-input-row">
+                            <input type="text" id="ai-input" placeholder="Ask about saving models, budget rules...">
+                            <button class="btn-chat-send" onclick="askAIAdvisor()">Ask AI</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bottom Datatable Audit Trail Section -->
+            <section class="logs-section" id="logs">
+                <div class="card table-card">
+                    <h3>📋 Detailed System Ledger Sheets</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item Ledger Description</th>
+                                    <th>Classification</th>
+                                    <th>Transaction Value</th>
+                                    <th>Action Control</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expense-rows">
+                                <!-- Appended iteratively via layout script engine runtime -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Wire up core execution scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
