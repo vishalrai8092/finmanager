@@ -100,3 +100,4 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`FinManager AI Server running safely on http://localhost:${PORT}`);
 });
+ 
